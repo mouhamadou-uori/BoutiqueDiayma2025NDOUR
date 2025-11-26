@@ -1,8 +1,37 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <!-- Migration: target modern .NET 8 -->
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- Enable nullable where useful for modern code (optional, can be relaxed later) -->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Allow single-file publish with .NET 8 -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
+
+  <!-- Ensure wwwroot is available when running the built executable from bin/* directories -->
+  <ItemGroup>
+    <!-- Use Update (not Include) to avoid duplicating SDK implicit 'Content' items (fixes NETSDK1022) -->
+    <Content Update="wwwroot\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Prevent file lock failures during Build/Publish when Diayma.exe is currently running -->
+  <Target Name="EnsureDiaymaExeNotLocked" BeforeTargets="Build;Publish" Condition="'$(OS)' == 'Windows_NT'">
+    <!-- Check if a Diayma.exe process is running -->
+    <Message Text="[Diayma] Vérification d'un processus Diayma.exe en cours d'exécution pour éviter le verrouillage de fichier..." Importance="high" />
+    <Exec Command="tasklist | findstr /I &quot;Diayma.exe&quot;" IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="DiaymaFoundExitCode" />
+    </Exec>
+
+    <!-- Try to stop it gracefully (best effort) only if found -->
+    <Message Text="[Diayma] Tentative d'arrêt de Diayma.exe (taskkill) avant Build/Publish..." Condition="'$(DiaymaFoundExitCode)' == '0'" Importance="high" />
+    <Exec Command="taskkill /IM Diayma.exe /F /T" Condition="'$(DiaymaFoundExitCode)' == '0'" IgnoreExitCode="true" />
+  </Target>
 
   <ItemGroup>
     <Compile Remove="Infrastructure\**" />
@@ -31,17 +60,12 @@
     <EmbeddedResource Remove="Resources\Models\Order.en.resx" />
   </ItemGroup>
 
-  <ItemGroup>
-    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.3" />
-  </ItemGroup>
+  <!-- Removed obsolete DotNetCliToolReference; not needed on .NET 8 -->
 
   <ItemGroup>
     <None Include="Resources\Models\ViewModels\Order.en.resx" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
-    <PackageReference Include="Microsoft.Extensions.Localization" Version="2.1.1" />
-  </ItemGroup>
+  <!-- Removed obsolete packages; ASP.NET Core assemblies come from the .NET 8 shared framework -->
 
 </Project>
