@@ -2,6 +2,64 @@
 
 ## Réponses aux questions et guide de débogage (Rider)
 
+### 1. Récupérez dans Visual Studio et exécutez le code fourni lien Github.
+
+**Récupération du projet**
+
+- Cloner le projet depuis le dépôt GitHub fourni
+- Ouvrir la solution dans Rider
+
+### 2. Quels sont les projets de la solution ?
+
+1 projet: « Diayma »
+Fichier: P2FixAnAppDotNetCode\Diayma.csproj
+Référence dans la solution: Diayma.sln → Project = "Diayma".
+
+### 3. Quelle est la version SDK .NET utilisée par ces projets ?
+
+SDK: Microsoft.NET.Sdk.Web (déclaré dans le .csproj)
+Target Framework: netcoreapp2.0 (ASP.NET Core 2.0)
+Packages principaux:
+Microsoft.AspNetCore.All 2.0.6
+Microsoft.Extensions.Localization 2.1.1 (note : version supérieure au reste de la pile 2.0.x)
+Outil CLI:
+Microsoft.VisualStudio.Web.CodeGeneration.Tools 2.0.3
+
+### 4. Installez le SDK
+
+Sur Rider après avoir cloner le repo, en exécutant le projet on nous demande a télécharger ASP.NET Core IIS Module
+on va sur ce lien : https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-10.0.100-windows-x64-installer
+
+et on télécharge le SDK
+
+![[Pasted image 20251126220741.png]]
+
+et on l'installe dans le pc
+### 5. Créez votre propre dépôt GitHub pour y stocker le code
+
+![[Pasted image 20251126222227.png]]
+![[Pasted image 20251126222551.png]]
+![[Pasted image 20251126222643.png]]
+
+### 6. Explorez l’application. Signalez 2 bugs trouvés ?
+
+i)
+Calcul du total du panier ignore la quantité
+Fichier: P2FixAnAppDotNetCode\Models\Cart.cs
+Méthode: GetTotalValue()
+Ligne actuelle: return GetCartLineList().Sum(x => x.Product.Price);
+Problème: le total ne multiplie pas par Quantity, ce qui sous-estime le montant.
+Correction suggérée: return GetCartLineList().Sum(x => x.Product.Price * x.Quantity);
+
+ii)
+Risque de NullReferenceException lors de la recherche de produit
+Fichier: P2FixAnAppDotNetCode\Models\Cart.cs
+Méthode: FindProductInCartLines(int productId)
+Ligne actuelle: return GetCartLineList().Where(x => x.Product.Id == productId).FirstOrDefault().Product;
+Problème: FirstOrDefault() peut renvoyer null; l’accès à .Product provoquerait une exception si le produit n’est pas trouvé.
+Corrections possibles:
+return GetCartLineList().FirstOrDefault(x => x.Product.Id == productId)?.Product;
+ou tester le résultat et retourner null/lever une exception contrôlée.
 
 ## 7) Où je place les points d’arrêt (question 7)
 
@@ -96,3 +154,27 @@ Routes et pipeline (fichiers/références entre parenthèses) que je vois:
 - `P2FixAnAppDotNetCode.Controllers.ProductController` → constructeur → `Index()`
 - `P2FixAnAppDotNetCode.Components.CartSummaryViewComponent` → constructeur → `Invoke()` (via `_Layout.cshtml`)
 
+### 9. Déployez votre solution sous forme d’exécutable Windows.
+Pour deployer on va utiliser cette commande :
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+
+Mais d'abord il faut :
+Convertir automatiquement mon projet .NET Core 2.0 → .NET 8  
+✔ Reconstruire entièrement Program.cs  
+✔ Reconstruire Startup.cs ou le supprimer pour fusionner la config  
+✔ Met à jour le `.csproj` (TFM, packages, dépendances obsolètes)  
+✔ Rendre compatible _Publish Single File_  
+✔ Prépare mon projet pour `win-x64`, `linux-x64`, etc.  
+✔ Supprimer les erreurs NETSDK1123 et NETSDK1138
+
+![[Pasted image 20251126230335.png]]
+![[Pasted image 20251126230421.png]]
+on obtiens un exécutable unique dans :
+bin/Release/net8.0/win-x64/publish/
+![[Pasted image 20251126231056.png]]
+Je vais mettre l'executable dans google drive.
+Lien :
+pour avoir acces a l'application naviger comme suit : bin/Release/net8.0/win-x64/publish/ et dedans vous verez l'executable 'Diayma'.
+Pour tester on va cliquer sur l'executable et voila ce que l'on obtient :
+![[Pasted image 20251126233334.png]]
+comme on peut ke voir un terminale s'est ouvert puis on nous montre un lien pour acceder a l'application.
