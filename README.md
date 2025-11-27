@@ -178,3 +178,5 @@ pour avoir acces a l'application naviger comme suit : bin/Release/net8.0/win-x64
 Pour tester on va cliquer sur l'executable et voila ce que l'on obtient :
 ![[Pasted image 20251126233334.png]]
 comme on peut ke voir un terminale s'est ouvert puis on nous montre un lien pour acceder a l'application.
+
+Lien google drive : https://drive.google.com/drive/folders/1Oq4lHjC1ogFI5sq7JzpEWVYJkCAkScHN?usp=sharing
